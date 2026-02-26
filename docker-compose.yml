@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  mssql:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: mssql
+    restart: unless-stopped
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=${SA_PASSWORD}
+    volumes:
+      - mssql-data:/var/opt/mssql
+    networks:
+      - is-net
+
+  app:
+    image: isapp:lab8
+    container_name: isapp
+    restart: unless-stopped
+    depends_on:
+      - mssql
+    ports:
+      - "127.0.0.1:5000:8080"
+    environment:
+      - ASPNETCORE_URLS=http://0.0.0.0:8080
+      - ASPNETCORE_ENVIRONMENT=Production
+      - App_Name=IsLabApp
+      - App_Version=${APP_VERSION}
+      - ConnectionStrings__Mssql=Server=mssql,1433;Database=IsLabDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=true;
+    networks:
+      - is-net
+
+networks:
+  is-net:
+    driver: bridge
+
+volumes:
+  mssql-data:
